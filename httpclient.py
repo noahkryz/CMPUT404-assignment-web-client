@@ -41,13 +41,19 @@ class HTTPClient(object):
         return None
 
     def get_code(self, data):
-        return None
+        code = str(data.split("\r\n")).split(" ")[1]
+        return code
 
     def get_headers(self,data):
-        return None
+        headers = []
+        # headers = str(data.split("\r\n\r\n")[0]).split("\r\n")
+        headers = str(data.split("\r\n\r\n")[0])
+        # print("Headers:\n", headers)
+        return headers
 
     def get_body(self, data):
-        return None
+        body = str(data.split("\r\n\r\n")[1])
+        return body
     
     def sendall(self, data):
         self.socket.sendall(data.encode('utf-8'))
@@ -67,9 +73,69 @@ class HTTPClient(object):
                 done = not part
         return buffer.decode('utf-8')
 
+    def parse_url(self, url):
+        parse_result = urllib.parse.urlparse(url)
+        host_name = parse_result.hostname
+        port_num = parse_result.port
+        path = parse_result.path
+
+        scheme = parse_result.scheme
+
+        # No port number given, manually set it based on protocol
+        if not port_num:
+            # https protocol, set to 443
+            if scheme == "https":
+                port_num = '443'
+            # http protocol, set to 80
+            else:
+                port_num = '80'
+
+        # No path given, manually set it to /
+        if not path:
+            path = '/'
+
+        return host_name, port_num, path
+
+        # print("Host: ", host_name)
+        # print("Port: ", port_num)
+        # print("Path: ", path)
+
     def GET(self, url, args=None):
-        code = 500
-        body = ""
+        # code = 500
+        # body = ""
+
+        # Obtain the components from the url, using the parse function
+        host_name, port_num, path = self.parse_url(url)
+
+        # Build up the GET request
+        first_line = "GET " + path + " HTTP/1.1\r\n"
+        host_line = "Host: " + host_name + ":" + str(port_num) + "\r\n"
+        connection_line = "Connection: close\r\n"
+        get_request = first_line + host_line + connection_line + "\r\n"
+        # print("Request\n", get_request)
+
+        # Connect to the host name with the port (default already handled)
+        self.connect(host_name, int(port_num))
+
+        # Send the GET request
+        self.sendall(get_request)
+
+        # Get the response from the server
+        response = self.recvall(self.socket)
+        
+        headers = self.get_headers(response)
+        code = int(self.get_code(response))
+        body = self.get_body(response)
+        print(response)
+        # print("Code: ", code)
+        # print("Body: ", body)
+
+        # print(response)
+
+        
+        # print("Host: ", host_name)
+        # print("Port: ", port_num)
+        # print("Path: ", path)
         return HTTPResponse(code, body)
 
     def POST(self, url, args=None):
