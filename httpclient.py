@@ -128,10 +128,10 @@ class HTTPClient(object):
         if args:
             for item in args:
                 if counter != len(args):
-                    argument_line += str(item) + '=' + str(args[item]) + "&"
+                    argument_line += str(item).replace(" ", "+") + '=' + str(args[item]).replace(" ", "+") + "&"
                     counter += 1
                 else:
-                    argument_line += str(item) + '=' + str(args[item])
+                    argument_line += str(item).replace(" ", "+") + '=' + str(args[item]).replace(" ", "+")
 
         # Obtain the components from the url, using the parse function
         host_name, port_num, path = self.parse_url(url)
