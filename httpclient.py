@@ -33,8 +33,6 @@ class HTTPResponse(object):
         self.body = body
 
 class HTTPClient(object):
-    #def get_host_port(self,url):
-
     def connect(self, host, port):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect((host, port))
@@ -45,10 +43,7 @@ class HTTPClient(object):
         return code
 
     def get_headers(self,data):
-        headers = []
-        # headers = str(data.split("\r\n\r\n")[0]).split("\r\n")
         headers = str(data.split("\r\n\r\n")[0])
-        # print("Headers:\n", headers)
         return headers
 
     def get_body(self, data):
@@ -80,8 +75,6 @@ class HTTPClient(object):
         path = parse_result.path
 
         scheme = parse_result.scheme
-        # self.params = parse_result.query
-        # print("Parameters: ", self.params)
 
         # No port number given, manually set it based on protocol
         if not port_num:
@@ -97,10 +90,6 @@ class HTTPClient(object):
             path = '/'
 
         return host_name, port_num, path
-
-        # print("Host: ", host_name)
-        # print("Port: ", port_num)
-        # print("Path: ", path)
 
     def GET(self, url, args=None):
         # Obtain the components from the url, using the parse function
@@ -126,6 +115,8 @@ class HTTPClient(object):
         code = int(self.get_code(response))
         body = self.get_body(response)
         print(body)
+
+        self.close()
 
         return HTTPResponse(code, body)
 
@@ -168,6 +159,8 @@ class HTTPClient(object):
         code = int(self.get_code(response))
         body = self.get_body(response)
         print(body)
+
+        self.close()
         
         return HTTPResponse(code, body)
 
