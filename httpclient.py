@@ -80,6 +80,8 @@ class HTTPClient(object):
         path = parse_result.path
 
         scheme = parse_result.scheme
+        # self.params = parse_result.query
+        # print("Parameters: ", self.params)
 
         # No port number given, manually set it based on protocol
         if not port_num:
@@ -101,17 +103,14 @@ class HTTPClient(object):
         # print("Path: ", path)
 
     def GET(self, url, args=None):
-        # code = 500
-        # body = ""
-
         # Obtain the components from the url, using the parse function
         host_name, port_num, path = self.parse_url(url)
 
         # Build up the GET request
-        first_line = "GET " + path + " HTTP/1.1\r\n"
+        method_line = "GET " + path + " HTTP/1.1\r\n"
         host_line = "Host: " + host_name + ":" + str(port_num) + "\r\n"
         connection_line = "Connection: close\r\n"
-        get_request = first_line + host_line + connection_line + "\r\n"
+        get_request = method_line + host_line + connection_line + "\r\n"
         # print("Request\n", get_request)
 
         # Connect to the host name with the port (default already handled)
@@ -126,21 +125,50 @@ class HTTPClient(object):
         headers = self.get_headers(response)
         code = int(self.get_code(response))
         body = self.get_body(response)
-        print(response)
-        # print("Code: ", code)
-        # print("Body: ", body)
+        print(body)
 
-        # print(response)
-
-        
-        # print("Host: ", host_name)
-        # print("Port: ", port_num)
-        # print("Path: ", path)
         return HTTPResponse(code, body)
 
     def POST(self, url, args=None):
-        code = 500
-        body = ""
+        # Construct a string of arguments to pass in the body
+        argument_line = ''
+        counter = 1
+        # Only construct the string if arguments are provided
+        if args:
+            for item in args:
+                if counter != len(args):
+                    argument_line += str(item) + '=' + str(args[item]) + "&"
+                    counter += 1
+                else:
+                    argument_line += str(item) + '=' + str(args[item])
+
+        # Obtain the components from the url, using the parse function
+        host_name, port_num, path = self.parse_url(url)
+
+        # Build up the POST request
+        method_line = "POST " + path + " HTTP/1.1\r\n"
+        host_line = "Host: " + host_name + ":" + str(port_num) + "\r\n"
+        content_line = "Content-Type: application/x-www-form-urlencoded" + "\r\n"
+        length_line = "Content-Length: " + str(len(argument_line)) + "\r\n"
+        connection_line = "Connection: close\r\n\r\n"
+        post_line = argument_line + "\r\n"
+
+        get_request = method_line + host_line + content_line + length_line + connection_line + post_line + "\r\n"
+
+        # Connect to the host name with the port (default already handled)
+        self.connect(host_name, int(port_num))
+
+        # Send the POST request
+        self.sendall(get_request)
+
+        # Get the response from the server
+        response = self.recvall(self.socket)
+        
+        headers = self.get_headers(response)
+        code = int(self.get_code(response))
+        body = self.get_body(response)
+        print(body)
+        
         return HTTPResponse(code, body)
 
     def command(self, url, command="GET", args=None):
